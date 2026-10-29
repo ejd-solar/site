@@ -105,6 +105,8 @@ html.dark .chips button{border-color:#5a6b85}
 html.dark .chips button.on{background:var(--blue);border-color:var(--blue);color:#0b1220}
 
 .mcut{font-size:21px;color:var(--ink)}
+.meshbox{background:#fff;color:#1c2a44;border:1px solid var(--line);border-radius:12px;padding:10px;margin:8px 0 12px}
+html.dark .meshbox{background:#0f1828;color:#f4f6fa}
 </style>
 </head>
 <body>
@@ -132,6 +134,10 @@ var JOBS = [
   sheet:"Mckeever_CV7_7LT_all_arrays_v3", orient:"East 5 + West 5 portrait, 1 row each", rafter:600, rafterNote:"see the paper drawing",
   note:"Finishing the East & West side arrays, 5 portrait each in 1 row. Front array already done.",
   design:{panels:10},
+  meshDiagram:{panels:[{x:0,y:0,w:1134,h:1762,t:"1"},{x:1142,y:0,w:1134,h:1762,t:"2"},{x:2284,y:0,w:1134,h:1762,t:"3"},{x:3426,y:0,w:1134,h:1762,t:"4"},{x:4568,y:0,w:1134,h:1762,t:"5"},{x:7400,y:0,w:1134,h:1762,t:"11"},{x:8542,y:0,w:1134,h:1762,t:"12"},{x:9684,y:0,w:1134,h:1762,t:"13"},{x:10826,y:0,w:1134,h:1762,t:"14"},{x:11968,y:0,w:1134,h:1762,t:"15"}],
+    paths:[[[0,0],[5702,0],[5702,1762],[0,1762]],[[7400,0],[13102,0],[13102,1762],[7400,1762]]],
+    tags:[[1,2851,-540],[2,6170,881],[3,2851,2310],[4,-500,881],[5,10251,-540],[6,13600,881],[7,10251,2310],[8,6930,881]],
+    labels:[["EAST array (panels 1–5)",2851,-1250],["WEST array (panels 11–15)",10251,-1250],["GUTTER",2851,3050],["GUTTER",10251,3050],["Ridge at top · each array clockwise from the top",6551,-1900]]},
   mesh:[{n:1,where:"EAST – top",side:5702},{n:2,where:"EAST – right end",side:1762},{n:3,where:"EAST – bottom",side:5702},{n:4,where:"EAST – left end",side:1762},
         {n:5,where:"WEST – top",side:5702},{n:6,where:"WEST – right end",side:1762},{n:7,where:"WEST – bottom",side:5702},{n:8,where:"WEST – left end",side:1762}],
   flags:["Finishing East & West side arrays only (5 portrait each, 1 row). Front is done – don't disturb it.",
@@ -167,6 +173,10 @@ var JOBS = [
            F:{L:2376,pieces:[2376],hooks:[8250,9050,9850]},
            G:{L:1862,pieces:[1862],hooks:[6250,7450]},
            H:{L:1862,pieces:[1862],hooks:[6250,7450]}}},
+  meshDiagram:{panels:[{x:0,y:0,w:1134,h:1762,t:"1"},{x:1142,y:0,w:1134,h:1762,t:"2"},{x:2284,y:0,w:1134,h:1762,t:"3"},{x:3426,y:0,w:1134,h:1762,t:"4"},{x:4568,y:0,w:1134,h:1762,t:"5"},{x:5710,y:0,w:1134,h:1762,t:"6"},{x:6852,y:0,w:1134,h:1762,t:"7"},{x:7994,y:0,w:1134,h:1762,t:"8"},{x:9136,y:0,w:1134,h:1762,t:"9"},{x:0,y:1770,w:1134,h:1762,t:"10"},{x:1142,y:1770,w:1134,h:1762,t:"11"},{x:2284,y:1770,w:1134,h:1762,t:"12"},{x:3426,y:1770,w:1134,h:1762,t:"13"},{x:4568,y:1770,w:1134,h:1762,t:"14"},{x:7994,y:1770,w:1134,h:1762,t:"15"},{x:9136,y:1770,w:1134,h:1762,t:"16"},{x:5967,y:1770,w:1762,h:1134,t:"17"}],
+    paths:[[[0,0],[10270,0],[10270,3532],[7994,3532],[7994,1762],[7729,1762],[7729,2904],[5967,2904],[5967,1762],[5702,1762],[5702,3532],[0,3532]]],
+    tags:[[1,5135,-560],[2,10820,1766],[3,9132,4080],[4,7861,2600],[5,7861,1450],[6,7861,3420],[7,6848,3500],[8,5835,3420],[9,5835,1450],[10,5835,2600],[11,2851,4080],[12,-550,1766]],
+    labels:[["RIDGE (top)",5135,-1200],["GUTTER / EAVES",5135,4950],["CHIMNEY below",6848,4150,"#c4161c"]]},
   mesh:[{n:1,where:"Top along panels 1–9",side:10270},{n:2,where:"Right side panels 9 & 16",side:3532},{n:3,where:"Bottom right under 15–16",side:2276},
         {n:4,where:"Up left edge of panel 15 (in gap)",side:1762},{n:5,where:"Top of right gap under panels 7/8",side:265},{n:6,where:"Down right side of panel 17",side:1134},
         {n:7,where:"Under panel 17",side:1762},{n:8,where:"Up left side of panel 17",side:1134},{n:9,where:"Top of left gap under panel 6",side:265},
@@ -368,7 +378,7 @@ function slopeFromPlan(planDepth, pitchDeg){ return planDepth / Math.cos(pitchDe
 function fmt(n){ n = Math.round(n); return (n < 0 ? '-' : '') + String(Math.abs(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 
 /* ===== EJD Solar Site app – UI ===== */
-var APP_VER = 'v1.1 (29 Oct 2026)';
+var APP_VER = 'v1.2 (29 Oct 2026)';
 var JOHN_EMAIL = 'southcroft365@gmail.com';
 var ICON = {
  ruler:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 17 3l4 4L7 21z"/><path d="m7 13 2 2M10 10l2 2M13 7l2 2"/></svg>',
@@ -601,8 +611,22 @@ var FIT_ORDER = [
  'Panels in number order from the START HERE corner. 30 mm end clamps at run ends, mid clamps with 8 mm gaps. Every clamp done up before you come down.',
  'Bird mesh round the whole outside edge, including gaps and notches.',
  'Final check and photos for John: hooks before tiles go back, finished array, mesh.'];
-var TOOLS = ['Rip saw + spare blades (rails)','File / deburr (rail ends)','Tape measure (8 m+)','Chalk line','Marker / crayon / pencil','Square','Cordless drill + bits and sockets','Impact driver',
+var TOOLS = ['Wire cutters (for the cable ties)','Stanley knife (for cutting the mesh)','Rip saw + spare blades (rails)','File / deburr (rail ends)','Tape measure (8 m+)','Chalk line','Marker / crayon / pencil','Square','Cordless drill + bits and sockets','Impact driver',
  'Torque wrench + K2 torque settings','Grinder + stone disc / tile cutter (only if tiles need notching)','Hook packers','Spare rail (flatness check)','Tile lifter','Roof ladder','Gloves and glasses','2–3 spare tiles (breakages)','Phone charged (photos + this app)'];
+function meshSVG(d){
+  var xs = [], ys = [];
+  d.panels.forEach(function(p){ xs.push(p.x, p.x + p.w); ys.push(p.y, p.y + p.h); });
+  d.tags.forEach(function(t){ xs.push(t[1] - 360, t[1] + 360); ys.push(t[2] - 360, t[2] + 360); });
+  d.labels.forEach(function(l){ ys.push(l[2] - 340, l[2] + 140); });
+  var x0 = Math.min.apply(null, xs) - 150, x1 = Math.max.apply(null, xs) + 150, y0 = Math.min.apply(null, ys) - 100, y1 = Math.max.apply(null, ys) + 100;
+  var s = '<svg class="meshsvg" viewBox="'+[x0, y0, x1 - x0, y1 - y0].join(' ')+'" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="Arial,Helvetica,sans-serif" role="img" aria-label="Bird mesh layout">';
+  d.panels.forEach(function(p){ s += '<rect x="'+p.x+'" y="'+p.y+'" width="'+p.w+'" height="'+p.h+'" fill="#1f2f4f" stroke="#fff" stroke-width="16"/>' +
+    '<text x="'+(p.x + p.w/2)+'" y="'+(p.y + p.h/2 + 140)+'" fill="#fff" font-size="400" font-weight="700" text-anchor="middle">'+esc(p.t)+'</text>'; });
+  d.paths.forEach(function(pt){ s += '<polygon points="'+pt.map(function(q){ return q.join(','); }).join(' ')+'" fill="none" stroke="#f26a10" stroke-width="80" stroke-linejoin="miter"/>'; });
+  d.tags.forEach(function(t){ s += '<circle cx="'+t[1]+'" cy="'+t[2]+'" r="330" fill="#f26a10" stroke="#fff" stroke-width="36"/><text x="'+t[1]+'" y="'+(t[2] + 135)+'" fill="#fff" font-size="380" font-weight="800" text-anchor="middle">'+t[0]+'</text>'; });
+  d.labels.forEach(function(l){ s += '<text x="'+l[1]+'" y="'+l[2]+'" fill="'+(l[3] || 'currentColor')+'" font-size="330" font-weight="700" text-anchor="middle">'+esc(l[0])+'</text>'; });
+  return s + '</svg>';
+}
 function meshTot(ms){ var s = 0; ms.forEach(function(x){ s += x.side; }); return {side: s, cut: s + 300*ms.length}; }
 function deliveryItems(){ var c = calc(), k = kit(c); if (!k) return []; var jb = c.jb;
   var cutTxt = ''; if (c.p){ var cuts = {}; c.p.bars.forEach(function(b){ b.forEach(function(x){ if (x !== 3650) cuts[x] = (cuts[x]||0)+1; }); }); cutTxt = Object.keys(cuts).sort(function(a,b){return b-a;}).map(function(x){ return cuts[x]+'× '+x; }).join(', '); }
@@ -630,7 +654,7 @@ function renderSheet(){
   if (jb && jb.mesh && jb.mesh.length){ var mt = meshTot(jb.mesh), md = 0;
     var mh = jb.mesh.map(function(x){ var id = 'mesh_'+x.n, on = !!D.ticks[id]; if (on) md++;
       return '<label class="tick'+(on?' done':'')+'"><input type="checkbox" data-t="'+id+'"'+(on?' checked':'')+'><span style="flex:1"><span class="need">'+x.n+'</span> '+esc(x.where)+'<br><span class="muted">side '+f0(x.side)+'</span> → CUT <b class="mcut">'+f0(x.side+300)+'</b></span></label>'; }).join('');
-    h += '<div class="card"><h2>'+ICON.list+' Bird mesh cut list</h2><div class="flag info">Every piece = side + 150 mm each end. Cut on the ground and number them before going up.</div>' +
+    h += '<div class="card"><h2>'+ICON.list+' Bird mesh cut list</h2>'+(jb.meshDiagram ? '<div class="meshbox">'+meshSVG(jb.meshDiagram)+'<p class="small" style="margin:6px 0 0"><b style="color:#f26a10">Orange line = mesh.</b> Circles = piece numbers below.</p></div>' : '')+'<div class="flag info">Every piece = side + 150 mm each end. Cut on the ground and number them before going up.</div>' +
       '<div class="prog"><i style="width:'+Math.round(100*md/jb.mesh.length)+'%"></i></div>'+mh +
       '<div class="grid"><div class="stat"><span>Total side</span><b>'+(mt.side/1000).toFixed(2)+' m</b></div><div class="stat"><span>Total cut</span><b>'+(mt.cut/1000).toFixed(2)+' m</b></div></div>' +
       '<p class="small muted">'+jb.mesh.length+' pieces. Lengths in mm.</p></div>'; }
