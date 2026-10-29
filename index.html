@@ -103,6 +103,8 @@ table.past th{font-size:12px;white-space:nowrap;text-transform:uppercase;color:v
 details summary{font-weight:800;min-height:44px;display:flex;align-items:center;cursor:pointer}
 html.dark .chips button{border-color:#5a6b85}
 html.dark .chips button.on{background:var(--blue);border-color:var(--blue);color:#0b1220}
+
+.mcut{font-size:21px;color:var(--ink)}
 </style>
 </head>
 <body>
@@ -122,8 +124,18 @@ html.dark .chips button.on{background:var(--blue);border-color:var(--blue);color
    groups: one entry per run of panels sharing 2 rails. x,y = top-left corner of the run's first panel, mm from the
    START HERE datum (top-left corner of panel 1). o: 'P' portrait / 'L' landscape.
    phase = where the design assumed a rafter, mm right of the datum (repeats every rafter c/c).
-   design = the numbers printed on the drawing – the app re-checks itself against these. */
+   design = the numbers printed on the drawing – the app re-checks itself against these.
+   mesh (optional) = bird mesh pieces [{n, where, side}] in mm. Cut = side + 300 (150 each end to wrap the corners).
+   minimal job (no groups) = Job sheet + Report only; Measure tab points to the paper drawing / Other job. */
 var JOBS = [
+ {id:"4890", sc:"SC 4890", name:"Mckeever", address:"127 Fillongley Road, Meriden, Coventry CV7 7LT", date:"2026-10-30", minimal:true,
+  sheet:"Mckeever_CV7_7LT_all_arrays_v3", orient:"East 5 + West 5 portrait, 1 row each", rafter:600, rafterNote:"see the paper drawing",
+  note:"Finishing the East & West side arrays, 5 portrait each in 1 row. Front array already done.",
+  design:{panels:10},
+  mesh:[{n:1,where:"EAST – top",side:5702},{n:2,where:"EAST – right end",side:1762},{n:3,where:"EAST – bottom",side:5702},{n:4,where:"EAST – left end",side:1762},
+        {n:5,where:"WEST – top",side:5702},{n:6,where:"WEST – right end",side:1762},{n:7,where:"WEST – bottom",side:5702},{n:8,where:"WEST – left end",side:1762}],
+  flags:["Finishing East & West side arrays only (5 portrait each, 1 row). Front is done – don't disturb it.",
+         "Rails, hooks and setting out: use the paper drawing Mckeever_CV7_7LT_all_arrays_v3."]},
  {id:"4899", sc:"SC 4899", name:"Barker", address:"17 Silver Street, Witcham, Ely CB6 2LF", date:"2026-10-28",
   sheet:"Barker_CB6_2LF_v3", orient:"Portrait", rafter:600, rafterNote:"Trussed rafters from loft photos – 600 c/c ASSUMED, check",
   phase:490, roofW:null, roofWEst:10620, slope:null, topGap:300, datumX:null,
@@ -146,7 +158,7 @@ var JOBS = [
   phase:250, roofW:10879, roofWEst:null, slope:4891, topGap:300, datumX:304,
   datumNote:"Top-left corner of panel 1: 304 in from the LEFT (west / street) verge, 300 down the slope from the ridge.",
   groups:[{x:0,y:0,n:9,o:"P",label:"Top row (1–9)"},{x:0,y:1770,n:5,o:"P",label:"Bottom left (10–14)"},{x:7994,y:1770,n:2,o:"P",label:"Bottom right (15–16)"},{x:5967,y:1770,n:1,o:"L",label:"Panel 17 landscape"}],
-  design:{panels:17, bars:14, hooks:46, endC:16, midC:26, joiners:6, meshM:34,
+  design:{panels:17, bars:14, hooks:46, endC:16, midC:26, joiners:6, meshM:37,
     rails:{A:{L:10370,pieces:[3650,3650,3070],hooks:[250,1450,2650,3450,3850,5050,6250,7050,7450,8650,9850]},
            B:{L:10370,pieces:[3650,3650,3070],hooks:[250,1450,2650,3450,3850,5050,6250,7050,7450,8650,9850]},
            C:{L:5802,pieces:[3650,2152],hooks:[250,1450,2650,3450,3850,4650,5450]},
@@ -155,6 +167,10 @@ var JOBS = [
            F:{L:2376,pieces:[2376],hooks:[8250,9050,9850]},
            G:{L:1862,pieces:[1862],hooks:[6250,7450]},
            H:{L:1862,pieces:[1862],hooks:[6250,7450]}}},
+  mesh:[{n:1,where:"Top along panels 1–9",side:10270},{n:2,where:"Right side panels 9 & 16",side:3532},{n:3,where:"Bottom right under 15–16",side:2276},
+        {n:4,where:"Up left edge of panel 15 (in gap)",side:1762},{n:5,where:"Top of right gap under panels 7/8",side:265},{n:6,where:"Down right side of panel 17",side:1134},
+        {n:7,where:"Under panel 17",side:1762},{n:8,where:"Up left side of panel 17",side:1134},{n:9,where:"Top of left gap under panel 6",side:265},
+        {n:10,where:"Down right edge of panel 14 (in gap)",side:1762},{n:11,where:"Bottom left under panels 10–14",side:5702},{n:12,where:"Left side panels 1 & 10",side:3532}],
   flags:["Regen's 4,891 ridge to eaves may be a PLAN figure – on the slope it's likely 5.5–5.8 m. Tape it.",
          "Chimney sits close below panel 14 / panel 17 – check flashing clearance before fixing.",
          "Panel 17 is LANDSCAPE on cross rails (short-side clamping) – check the JA manual allows it before fitting.",
@@ -352,7 +368,7 @@ function slopeFromPlan(planDepth, pitchDeg){ return planDepth / Math.cos(pitchDe
 function fmt(n){ n = Math.round(n); return (n < 0 ? '-' : '') + String(Math.abs(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 
 /* ===== EJD Solar Site app – UI ===== */
-var APP_VER = 'v1.0 (28 Oct 2026)';
+var APP_VER = 'v1.1 (29 Oct 2026)';
 var JOHN_EMAIL = 'southcroft365@gmail.com';
 var ICON = {
  ruler:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 17 3l4 4L7 21z"/><path d="m7 13 2 2M10 10l2 2M13 7l2 2"/></svg>',
@@ -393,7 +409,7 @@ function hm(m){ if (m == null) return '–'; return Math.floor(m/60)+'h '+('0'+(
 var S = { jobId: load('ejd_job', JOBS.length ? JOBS[0].id : 'manual'), tab: load('ejd_tab', 'measure') };
 function job(){ for (var i=0;i<JOBS.length;i++) if (JOBS[i].id === S.jobId) return JOBS[i]; return null; }
 function key(){ return 'ejd_job_' + S.jobId; }
-function J(){ var d = load(key(), null); if (!d){ var jb = job(); d = {m:{roofW:'', slopeMode:'slope', slope:'', planD:'', pitch:'', raf:jb ? String(jb.rafter) : '600', firstRaf:'', top:'300',
+function J(){ var d = load(key(), null); if (!d){ var jb = job(); d = {m:{roofW:'', slopeMode:'slope', slope:'', planD:'', pitch:'', raf:jb && jb.rafter ? String(jb.rafter) : '600', firstRaf:'', top:'300',
    orient:'P', rows:'', perRow:'', gapRow:'', gapAfter:'', gapW:''}, ticks:{}, got:{}, r:{date: jb ? jb.date : todayISO(), team:'4', start:'', finish:'', st:{}, fitted:'', notes:'', extraShort:'', name:'', addr:''}}; }
  return d; }
 function setJ(d){ save(key(), d); }
@@ -405,6 +421,7 @@ function calc(){
   var slope = m.slopeMode === 'plan' ? (num(m.planD) && num(m.pitch) != null ? slopeFromPlan(num(m.planD), num(m.pitch)) : null) : num(m.slope);
   out.slopeUsed = slope;
   var roofW = num(m.roofW), RAF = num(m.raf) || 600, first = num(m.firstRaf), top = num(m.top); if (top == null) top = 300;
+  if (jb && !jb.groups){ out.p = null; out.minimal = true; return out; }
   if (jb){
     var opt = {groups: jb.groups, RAF: RAF, roofW: roofW, slope: slope, topGap: top};
     var centredOff = roofW ? Math.floor((roofW - planWidth(jb.groups))/2) : (jb.datumX || 300);
@@ -416,7 +433,7 @@ function calc(){
     var dd = jb.design, p0 = plan({groups: jb.groups, RAF: jb.rafter, phase: jb.phase, offset: jb.datumX || 300}), diffs = [];
     ['panels','hooks','endC','midC','joiners'].forEach(function(k){ if (p0[k] !== dd[k]) diffs.push(k+' '+p0[k]+' v drawing '+dd[k]); });
     if (p0.nBars !== dd.bars) diffs.push('bars '+p0.nBars+' v drawing '+dd.bars);
-    if (Math.abs(p0.meshM - dd.meshM) > 1) diffs.push('mesh '+p0.meshM+' m v drawing '+dd.meshM+' m');
+    if (Math.abs(p0.meshM - (jb.mesh ? Math.ceil(meshTot(jb.mesh).side/1000) : dd.meshM)) > 1) diffs.push('mesh '+p0.meshM+' m v drawing '+dd.meshM+' m');
     p0.rails.forEach(function(r){ var x = dd.rails[r.id]; if (!x) return;
       if (x.L !== r.L || x.pieces.join() !== r.pieces.join() || x.hooks.join() !== r.hooks.map(Math.round).join()) diffs.push('rail '+r.id); });
     out.selfDiffs = diffs;
@@ -491,6 +508,7 @@ function renderMeasure(){
   }
   h += '</div>';
   var c = calc(); window._calc = c;
+  if (c.minimal){ h = '<div class="card"><h2>'+ICON.ruler+' '+esc(jb.name)+' · '+esc(jb.sc)+'</h2><div class="flag info">'+esc(jb.note||'')+'</div><p>Rails, hooks and setting out for this job are on the paper drawing <b>'+esc(jb.sheet)+'</b>. The bird mesh cut list is on the Job sheet tab.</p><p class="small muted">To check a roof with the calculator, pick “Other job – calculator” in the list at the top.</p></div>'; $('t_measure').innerHTML = h; return; }
   if (!c.p){ h += '<div class="banner warn">'+ICON.ruler+'<div>Type the roof width to start.<small>'+(c.none ? 'Nothing fits – check the numbers.' : 'Then ridge to eaves and the rafter centres.')+'</small></div></div>'; $('t_measure').innerHTML = h; bindMeasure(); return; }
   var p = c.p, roofW = num(m.roofW), fitsW = roofW ? p.spareW >= 0 : null, fitsS = c.slopeUsed ? p.spareS >= 0 : null;
   // banner
@@ -585,6 +603,7 @@ var FIT_ORDER = [
  'Final check and photos for John: hooks before tiles go back, finished array, mesh.'];
 var TOOLS = ['Rip saw + spare blades (rails)','File / deburr (rail ends)','Tape measure (8 m+)','Chalk line','Marker / crayon / pencil','Square','Cordless drill + bits and sockets','Impact driver',
  'Torque wrench + K2 torque settings','Grinder + stone disc / tile cutter (only if tiles need notching)','Hook packers','Spare rail (flatness check)','Tile lifter','Roof ladder','Gloves and glasses','2–3 spare tiles (breakages)','Phone charged (photos + this app)'];
+function meshTot(ms){ var s = 0; ms.forEach(function(x){ s += x.side; }); return {side: s, cut: s + 300*ms.length}; }
 function deliveryItems(){ var c = calc(), k = kit(c); if (!k) return []; var jb = c.jb;
   var cutTxt = ''; if (c.p){ var cuts = {}; c.p.bars.forEach(function(b){ b.forEach(function(x){ if (x !== 3650) cuts[x] = (cuts[x]||0)+1; }); }); cutTxt = Object.keys(cuts).sort(function(a,b){return b-a;}).map(function(x){ return cuts[x]+'× '+x; }).join(', '); }
   return [{k:'panels', n:k.panels, t:'Panels – JA Solar 460 W (1762 × 1134 × 30)'}, {k:'bars', n:k.bars, t:'Rails 3.65 m (cut on site'+(cutTxt ? ': '+cutTxt : '')+')'},
@@ -603,11 +622,18 @@ function renderSheet(){
   if (jb){ var t = tickList('chk', jb.flags.map(esc)); h += '<div class="card"><h2>'+ICON.alert+' Check before you fix</h2><p class="small muted" style="margin-top:0">Anything wrong → STOP and ring John.</p>'+t.h+'</div>'; }
   var items = deliveryItems();
   h += '<div class="card"><h2>'+ICON.truck+' Check Regen delivery</h2><div class="flag red">Short or wrong → ring Regen BEFORE going up.</div>';
-  if (!items.length) h += '<p class="muted">Measure the roof first (Measure tab) to get the counts.</p>';
+  if (!items.length) h += '<p class="muted">'+(c.minimal ? 'Check the delivery against the paper drawing '+esc(jb.sheet)+'.' : 'Measure the roof first (Measure tab) to get the counts.')+'</p>';
   items.forEach(function(it){ var id = 'del_'+it.k, on = !!D.ticks[id], g = num(D.got[it.k]), sh = g != null && g < it.n;
     h += '<div class="tick'+(on?' done':'')+'"><input type="checkbox" data-t="'+id+'"'+(on?' checked':'')+'><span style="flex:1"><span class="need">'+it.n+(it.unit ? ' m' : ' ×')+'</span> '+esc(it.t)+(sh ? '<br><b class="short">SHORT by '+(it.n - g)+'</b>' : '')+'</span>' +
          '<input class="cnt" type="text" inputmode="numeric" data-got="'+it.k+'" value="'+esc(D.got[it.k] == null ? '' : D.got[it.k])+'" placeholder="got"></div>'; });
   h += '<p class="small muted">Tick when it\'s all there. Only type in “got” if it\'s short – it goes on the report.</p></div>';
+  if (jb && jb.mesh && jb.mesh.length){ var mt = meshTot(jb.mesh), md = 0;
+    var mh = jb.mesh.map(function(x){ var id = 'mesh_'+x.n, on = !!D.ticks[id]; if (on) md++;
+      return '<label class="tick'+(on?' done':'')+'"><input type="checkbox" data-t="'+id+'"'+(on?' checked':'')+'><span style="flex:1"><span class="need">'+x.n+'</span> '+esc(x.where)+'<br><span class="muted">side '+f0(x.side)+'</span> → CUT <b class="mcut">'+f0(x.side+300)+'</b></span></label>'; }).join('');
+    h += '<div class="card"><h2>'+ICON.list+' Bird mesh cut list</h2><div class="flag info">Every piece = side + 150 mm each end. Cut on the ground and number them before going up.</div>' +
+      '<div class="prog"><i style="width:'+Math.round(100*md/jb.mesh.length)+'%"></i></div>'+mh +
+      '<div class="grid"><div class="stat"><span>Total side</span><b>'+(mt.side/1000).toFixed(2)+' m</b></div><div class="stat"><span>Total cut</span><b>'+(mt.cut/1000).toFixed(2)+' m</b></div></div>' +
+      '<p class="small muted">'+jb.mesh.length+' pieces. Lengths in mm.</p></div>'; }
   var f = tickList('fit', FIT_ORDER); h += '<div class="card"><h2>'+ICON.list+' Fitting order</h2>'+f.h+'</div>';
   var tl = tickList('tool', TOOLS); h += '<div class="card"><h2>'+ICON.tool+' Tools to install</h2><p class="small muted" style="margin-top:0">Regen deliver all the kit – just bring these.</p>'+tl.h+'</div>';
   h += '<button class="btn ghost" id="resetTicks">Clear all ticks for this job</button>';
@@ -621,7 +647,7 @@ function renderSheet(){
 var STAGES = [['hooks','Hooks done'],['rails','Rails done'],['panels','Panels done'],['mesh','Mesh done']];
 function reportText(){
   var jb = job(), r = D.r, c = calc(), k = kit(c), m = D.m;
-  var total = mins(r.start, r.finish), fitted = num(r.fitted), exp = k ? k.panels : null, team = num(r.team);
+  var total = mins(r.start, r.finish), fitted = num(r.fitted), exp = k ? k.panels : (jb && jb.design ? jb.design.panels : null), team = num(r.team);
   var L = [];
   L.push('SOLAR REPORT ' + (jb ? jb.sc : 'NEW JOB'));
   L.push('Job: ' + (jb ? jb.name : (r.name || '–')));
