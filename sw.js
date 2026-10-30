@@ -1,5 +1,5 @@
 // EJD Solar Site offline cache. Version changes on every build so phones pick up updates.
-var C = 'ejd-solar-28b111f7', FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-512.png'];
+var C = 'ejd-solar-241e0975', FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-512.png'];
 self.addEventListener('install', function(e){ e.waitUntil(caches.open(C).then(function(c){ return c.addAll(FILES); })); self.skipWaiting(); });
 self.addEventListener('activate', function(e){ e.waitUntil(caches.keys().then(function(k){ return Promise.all(k.filter(function(x){ return x !== C; }).map(function(x){ return caches.delete(x); })); }).then(function(){ return self.clients.claim(); })); });
 self.addEventListener('fetch', function(e){
