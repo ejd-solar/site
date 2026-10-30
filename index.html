@@ -131,6 +131,26 @@ html.dark .roof .btn.ghost{background:transparent;color:#ffb3b3;border-color:#7a
 .timebox>div{grid-column:1/-1}
 @media (max-width:400px){.stage{flex-wrap:wrap;row-gap:4px}.stage b{flex:1 1 100%}.stage input{flex:1 1 0;min-width:0}}
 html.dark{color-scheme:dark}
+/* v1.5 roof clocks */
+.g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}.g2 .btn{margin:6px 0}
+.btn.amber{background:#b36b00}
+.clockrow{display:flex;align-items:center;gap:10px;margin:6px 0 2px}.clockrow>div{flex:1;min-width:0}
+.clock{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.5px}
+.pill{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:800;font-size:15px;background:var(--mist);color:var(--ink)}
+.st-working .pill{background:#0a7d32;color:#fff}.st-paused .pill{background:#f2a900;color:#1c2a44}.st-finished .pill{background:var(--navy);color:#fff}
+html.dark .st-finished .pill{background:var(--blue);color:#0b1220}
+.st-working{box-shadow:0 0 0 3px #0a7d32 inset}
+.ok-flag{background:var(--okbg);color:var(--ok);font-weight:800;padding:12px;border-radius:12px;margin:8px 0;font-size:17px}
+.taps{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin:10px 0 4px}
+.tap{min-height:60px;border-radius:12px;border:2px solid var(--navy);background:var(--card);color:var(--ink);font-weight:800;font-size:17px;padding:6px;line-height:1.15}
+.tap small{display:block;font-size:15px;font-weight:700;margin-top:2px}
+.tap.done{background:var(--mist);color:var(--muted);border-color:var(--line)}
+html.dark .tap{border-color:#5a6b85}
+.jobt{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.jobt>div{background:var(--mist);border-radius:12px;padding:8px 12px}
+.jobt span{display:block;font-size:14px;font-weight:700;color:var(--muted)}.jobt b{font-size:22px}.jobt small{font-size:13px;color:var(--warn)}
+.linkbtn{background:none;border:0;color:var(--blue);text-decoration:underline;font-weight:800;font-size:16px;padding:6px 2px;min-height:40px}
+html:not(.dark) .linkbtn{color:#1d4f9c}
+html.dark .btn.green{background:#0a7d32}html.dark .btn.red{background:#c4161c}html.dark .btn.amber{background:#b36b00}html.dark .btn.wa{background:#128c4a}
 </style>
 </head>
 <body>
@@ -404,7 +424,7 @@ function slopeFromPlan(planDepth, pitchDeg){ return planDepth / Math.cos(pitchDe
 function fmt(n){ n = Math.round(n); return (n < 0 ? '-' : '') + String(Math.abs(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 
 /* ===== EJD Solar Site app – UI ===== */
-var APP_VER = 'v1.4 (30 Oct 2026)';
+var APP_VER = 'v1.5 (30 Oct 2026)';
 var JOHN_EMAIL = 'southcroft365@gmail.com';
 var ICON = {
  ruler:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 17 3l4 4L7 21z"/><path d="m7 13 2 2M10 10l2 2M13 7l2 2"/></svg>',
@@ -448,7 +468,7 @@ function key(){ return 'ejd_job_' + S.jobId; }
 function J(){ var d = load(key(), null); if (!d){ var jb = job(); d = {m:{roofW:'', slopeMode:'slope', slope:'', planD:'', pitch:'', raf:jb && jb.rafter ? String(jb.rafter) : '600', firstRaf:'', top:'300',
    orient:'P', rows:'', perRow:'', gapRow:'', gapAfter:'', gapW:''}, ticks:{}, got:{}, r:freshR()}; }
  return d; }
-function freshR(){ var jb = job(); return {date: jb ? jb.date : todayISO(), team:'4', start:'', finish:'', st:{}, notes:'', extraShort:'', name:'', addr:''}; }
+function freshR(){ var jb = job(); return {date: jb ? jb.date : todayISO(), team:'4', st:{}, notes:'', extraShort:'', name:'', addr:''}; }
 function setJ(d){ save(key(), d); }
 var D = null;
 
@@ -696,51 +716,77 @@ function renderSheet(){
 
 /* ---------- render: REPORT ---------- */
 var STAGES = [['hooks','Hooks done'],['rails','Rails done'],['panels','Panels done'],['mesh','Mesh done']];
-function newRoof(name, exp){ return {name: name || '', exp: exp == null ? '' : String(exp), fitted: '', start: '', finish: '', st: {}, issues: '', notes: ''}; }
-/* make sure D.r.roofs exists; old single-roof reports move into Roof 1 */
+function hasMesh(){ var jb = job(); return jb ? !!(jb.mesh || (jb.design && jb.design.meshM)) : true; }
+function stages(){ var m = hasMesh(); return STAGES.filter(function(s){ return m || s[0] !== 'mesh'; }); }
+function newRoof(name, exp){ return {name: name || '', exp: exp == null ? '' : String(exp), fitted: '', segs: [], done: {}, finished: false, issues: '', notes: ''}; }
+function hmT(ms){ if (!ms) return '–'; var d = new Date(ms); return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
+function tsFrom(hmv, ref){ if (!hmv) return null; var p = hmv.split(':'), d = new Date((D.r.date || todayISO()) + 'T12:00:00'); d.setHours(+p[0], +p[1], 0, 0); var t = d.getTime(); if (ref && t < ref) t += 864e5; return t; }
+function workMs(x, now){ var t = 0; (x.segs || []).forEach(function(s){ t += Math.max(0, (s.e || now || Date.now()) - s.s); }); return t; }
+function isWorking(x){ var s = x.segs || []; return !!(s.length && !s[s.length-1].e); }
+function status(x){ return x.finished ? 'Finished' : isWorking(x) ? 'Working' : (x.segs && x.segs.length) ? 'Paused' : 'Not started'; }
+function pauses(x){ return Math.max(0, (x.segs || []).length - 1); }
+function clk(ms){ var s = Math.floor(ms/1000); return Math.floor(s/3600)+':'+('0'+Math.floor(s%3600/60)).slice(-2)+':'+('0'+s%60).slice(-2); }
+function wmin(ms){ return Math.round(ms/60000); }
+/* make sure D.r.roofs exists in the v1.5 shape; migrates v1.2 single-roof and v1.3/1.4 start/finish + stage times */
 function roofs(){
-  var r = D.r, jb = job(), k = kit(calc());
+  var r = D.r, jb = job(), k = kit(calc()), ch = false;
   if (!r.roofs || !r.roofs.length){
     if (jb && jb.roofs && jb.roofs.length) r.roofs = jb.roofs.map(function(x){ return newRoof(x.name, x.panels); });
-    else r.roofs = [newRoof(jb && jb.orient ? 'Roof 1' : 'Roof 1', k ? k.panels : (jb && jb.design ? jb.design.panels : ''))];
-    var r1 = r.roofs[0];
+    else r.roofs = [newRoof('Roof 1', k ? k.panels : (jb && jb.design ? jb.design.panels : ''))];
+    var r1 = r.roofs[0]; r1.st = {};
     if (r.fitted) r1.fitted = r.fitted;
     if (r.st){ for (var s in r.st) if (r.st[s]) r1.st[s] = r.st[s]; }
-    if (r.roofs.length === 1){ r1.start = r1.start || r.start || ''; r1.finish = r1.finish || r.finish || ''; }
-    delete r.fitted; r.st = {}; setJ(D);
+    if (r.roofs.length === 1 && r.start){ r1.start = r.start; r1.finish = r.finish || ''; r.start = ''; r.finish = ''; }
+    delete r.fitted; r.st = {}; ch = true;
   }
+  r.roofs.forEach(function(x){ if (x.segs) return; ch = true;
+    var s = tsFrom(x.start), e = x.finish ? tsFrom(x.finish, s) : null; x.segs = s ? [{s: s, e: e}] : []; x.finished = !!(s && e);
+    x.done = {}; var prev = s; STAGES.forEach(function(st){ var v = x.st && x.st[st[0]]; if (v){ x.done[st[0]] = tsFrom(v, prev); prev = x.done[st[0]]; } });
+    delete x.start; delete x.finish; delete x.st; });
+  if (r.start || r.finish){ ch = true; if (r.start) r.startOv = r.start; if (r.finish) r.finishOv = r.finish; delete r.start; delete r.finish; }
+  if (ch) setJ(D);
   return r.roofs;
 }
-function roofCalc(x){ var t = mins(x.start, x.finish), f = num(x.fitted), e = num(x.exp); return {t: t, f: f, e: e, mpp: t != null && f ? t / f : null}; }
+function jobTimes(){
+  var R = roofs(), st = null, fin = null, allF = true, any = false;
+  R.forEach(function(x){ (x.segs || []).forEach(function(s){ any = true; if (st == null || s.s < st) st = s.s; if (s.e && (fin == null || s.e > fin)) fin = s.e; }); if (x.segs.length && !x.finished) allF = false; });
+  if (!any || !allF) fin = null;
+  var S0 = D.r.startOv ? tsFrom(D.r.startOv) : st, F0 = D.r.finishOv ? tsFrom(D.r.finishOv, S0) : fin;
+  return {start: S0, finish: F0, edS: !!D.r.startOv, edF: !!D.r.finishOv, span: S0 && F0 ? F0 - S0 : null};
+}
+function roofCalc(x){ var w = workMs(x), f = num(x.fitted), e = num(x.exp), m = wmin(w); return {w: w, t: x.segs.length ? m : null, f: f, e: e, mpp: m && f ? m / f : null}; }
 function reportText(){
-  var jb = job(), r = D.r, c = calc(), m = D.m, R = roofs();
-  var total = mins(r.start, r.finish), team = num(r.team), fitted = 0, exp = 0, anyF = false, anyE = false;
-  R.forEach(function(x){ var q = roofCalc(x); if (q.f != null){ fitted += q.f; anyF = true; } if (q.e != null){ exp += q.e; anyE = true; } });
+  var jb = job(), r = D.r, c = calc(), m = D.m, R = roofs(), jt = jobTimes();
+  var team = num(r.team), fitted = 0, exp = 0, anyF = false, anyE = false, work = 0;
+  R.forEach(function(x){ var q = roofCalc(x); work += q.w; if (q.f != null){ fitted += q.f; anyF = true; } if (q.e != null){ exp += q.e; anyE = true; } });
   if (!anyF) fitted = null; if (!anyE) exp = null;
-  var L = [];
+  var total = work ? wmin(work) : null, L = [];
   L.push('SOLAR REPORT ' + (jb ? jb.sc : 'NEW JOB'));
   L.push('Job: ' + (jb ? jb.name : (r.name || '–')));
   L.push('Address: ' + (jb ? jb.address : (r.addr || '–')));
   L.push('Date: ' + ukDate(r.date));
   L.push('Team: ' + (team || '–') + ' men');
   L.push('Roofs: ' + R.length);
-  R.forEach(function(x, i){ var q = roofCalc(x);
+  R.forEach(function(x, i){ var q = roofCalc(x), pc = pauses(x);
     L.push('');
     L.push('=== ROOF ' + (i + 1) + ': ' + (x.name || 'Roof ' + (i + 1)) + ' ===');
+    L.push('Status: ' + status(x));
     L.push('Panels: ' + (q.f != null ? q.f : '–') + ' fitted of ' + (q.e != null ? q.e : '–') + ' designed' + (q.f != null && q.e != null && q.f < q.e ? ' – ' + (q.e - q.f) + ' NOT FITTED' : ''));
-    L.push('Start: ' + (x.start || '–') + ' | Finish: ' + (x.finish || '–') + ' | Time: ' + (q.t != null ? hm(q.t) : '–') + (q.mpp ? ' | ' + q.mpp.toFixed(1) + ' min/panel' : ''));
-    var prev = x.start;
-    STAGES.forEach(function(s){ var t = x.st[s[0]]; L.push('- ' + s[1] + ': ' + (t ? t + (prev ? ' (' + hm(mins(prev, t)) + ' for this stage)' : '') : '–')); if (t) prev = t; });
+    L.push('Working time: ' + (q.t != null ? hm(q.t) : '–') + ' (' + pc + ' pause' + (pc === 1 ? '' : 's') + ')' + (q.mpp ? ' | ' + q.mpp.toFixed(1) + ' min/panel' : ''));
+    if (x.segs.length){ L.push('Started ' + hmT(x.segs[0].s) + ' | Finished ' + (x.finished ? hmT(x.segs[x.segs.length-1].e) : '–'));
+      if (x.segs.length > 1) L.push('Work periods: ' + x.segs.map(function(s){ return hmT(s.s) + '–' + (s.e ? hmT(s.e) : 'now'); }).join(', ')); }
+    L.push('Stages done: ' + stages().map(function(s){ return s[1].replace(' done', '') + ' ' + hmT(x.done[s[0]]); }).join(' | '));
     L.push('Short / issues: ' + (x.issues || 'none'));
     if (x.notes) L.push('Notes: ' + x.notes);
   });
   L.push('');
   L.push('=== TOTALS ===');
-  L.push('Job start: ' + (r.start || '–') + ' | Job finish: ' + (r.finish || '–'));
-  L.push('Overall time on site: ' + (total != null ? hm(total) + ' (' + total + ' min)' : '–'));
+  L.push('Job start: ' + hmT(jt.start) + (jt.edS ? ' (edited)' : '') + ' | Job finish: ' + hmT(jt.finish) + (jt.edF ? ' (edited)' : ''));
+  L.push('On site (first start to last finish): ' + (jt.span != null ? hm(wmin(jt.span)) : '–'));
+  L.push('Total working time (all roofs, no pauses): ' + (total != null ? hm(total) + ' (' + total + ' min)' : '–'));
   L.push('Panels fitted (all roofs): ' + (fitted != null ? fitted : '–') + ' of ' + (exp != null ? exp : '–') + ' designed' + (fitted != null && exp != null && fitted < exp ? ' – ' + (exp - fitted) + ' NOT FITTED' : ''));
-  var mpp = total != null && fitted ? total / fitted : null;
-  L.push('Minutes per panel: ' + (mpp ? mpp.toFixed(1) + (team ? ' (' + (mpp * team).toFixed(0) + ' man-minutes per panel)' : '') : '–'));
+  var mpp = total && fitted ? total / fitted : null;
+  L.push('Minutes per panel (working time): ' + (mpp ? mpp.toFixed(1) + (team ? ' (' + (mpp * team).toFixed(0) + ' man-minutes per panel)' : '') : '–'));
   if (!c.minimal){ var sl = c.slopeUsed;
     L.push('Roof measured (Measure tab): width ' + (num(m.roofW) ? fmt(num(m.roofW)) + ' mm' : '–') + ' | ridge to eaves ' + (sl ? fmt(sl) + ' mm on slope' + (m.slopeMode === 'plan' ? ' (plan ' + m.planD + ' @ ' + m.pitch + ' deg)' : '') : '–') +
          ' | rafters ' + (m.raf || '–') + ' c/c' + (num(m.firstRaf) != null ? ' | first rafter ' + m.firstRaf + ' from left verge' : ''));
@@ -751,33 +797,45 @@ function reportText(){
   L.push('Job notes: ' + (r.notes || 'none'));
   L.push('Photos: sent separately in WhatsApp');
   L.push('END OF REPORT (EJD Solar Site app ' + APP_VER + ')');
-  return {text: L.join('\n'), total: total, fitted: fitted, exp: exp, mpp: mpp, team: team};
+  return {text: L.join('\n'), total: total, fitted: fitted, exp: exp, mpp: mpp, team: team, span: jt.span};
+}
+function stateBtns(x, i){
+  var s = status(x), h = '';
+  if (s === 'Not started') h = '<button type="button" class="btn big green" data-act="'+i+'|start">▶ Start</button>';
+  else if (s === 'Working') h = '<div class="g2"><button type="button" class="btn big amber" data-act="'+i+'|pause">❚❚ Pause</button><button type="button" class="btn big red" data-act="'+i+'|finish">■ Finish</button></div>';
+  else if (s === 'Paused') h = '<div class="g2"><button type="button" class="btn big green" data-act="'+i+'|resume">▶ Resume</button><button type="button" class="btn big red" data-act="'+i+'|finish">■ Finish</button></div>';
+  else h = '<div class="flag ok-flag">Finished at '+hmT(x.segs[x.segs.length-1].e)+'</div>';
+  return h;
 }
 function renderReport(){
-  var jb = job(), r = D.r, R = roofs(), h = '';
+  var jb = job(), r = D.r, R = roofs(), jt = jobTimes(), h = '';
   h += '<div class="card"><h2>'+ICON.home+' Job</h2>';
   if (jb) h += '<div style="font-size:19px;font-weight:800">'+esc(jb.sc)+' · '+esc(jb.name)+'</div><div class="muted">'+esc(jb.address)+'</div>';
   else h += field('r_name', 'Job name / SC number', r.name, '', 'e.g. SC 4901 Smith') + field('r_addr', 'Address', r.addr, '', '');
   h += '<label class="f" for="r_date">Date</label><input id="r_date" type="date" value="'+esc(r.date)+'">';
-  h += '<label class="f">Team size</label><div class="chips" data-chips="team">'+['2','3','4','5','6'].map(function(v){ return '<button type="button" data-v="'+v+'" class="'+(r.team === v ? 'on' : '')+'">'+v+'</button>'; }).join('')+'</div></div>';
-  h += '<div class="card"><h2>'+ICON.clock+' Job times <small class="muted">(whole job)</small></h2><div class="timebox">' +
-       '<button class="btn big green" id="startNow">Start now</button><button class="btn big red" id="finishNow">Finished now</button>' +
-       '<div><label class="f" for="r_start">Start</label><div class="tnow"><input id="r_start" type="time" value="'+esc(r.start)+'">'+'<button type="button" class="clr" aria-label="Clear time" data-clr="job|start">×</button></div></div><div><label class="f" for="r_finish">Finish</label><div class="tnow"><input id="r_finish" type="time" value="'+esc(r.finish)+'">'+'<button type="button" class="clr" aria-label="Clear time" data-clr="job|finish">×</button></div></div></div></div>';
-  R.forEach(function(x, i){ var q = roofCalc(x);
-    h += '<div class="card roof"><div class="roofhd"><span class="roofno">'+(i+1)+'</span><input class="roofname" type="text" data-rf="'+i+'|name" value="'+esc(x.name)+'" placeholder="Roof '+(i+1)+' – e.g. rear" aria-label="Roof name"></div>';
+  h += '<label class="f">Team size</label><div class="chips" data-chips="team">'+['2','3','4','5','6'].map(function(v){ return '<button type="button" data-v="'+v+'" class="'+(r.team === v ? 'on' : '')+'">'+v+'</button>'; }).join('')+'</div>';
+  h += '<div class="jobt"><div><span>Job start</span><b>'+hmT(jt.start)+(jt.edS ? ' <small>edited</small>' : '')+'</b></div><div><span>Job finish</span><b>'+hmT(jt.finish)+(jt.edF ? ' <small>edited</small>' : '')+'</b></div></div>';
+  h += '<p class="small muted" style="margin:4px 0 0">Worked out from the roof clocks. <button type="button" class="linkbtn" id="editT">'+(r.editT ? 'Hide' : 'Edit times')+'</button></p>';
+  if (r.editT) h += '<div class="editt">' + [['startOv','Job start'],['finishOv','Job finish']].map(function(s){ return '<div class="stage"><b>'+s[1]+'</b><input type="time" id="r_'+s[0]+'" value="'+esc(r[s[0]] || '')+'"><button type="button" class="clr" aria-label="Back to automatic" data-ov="'+s[0]+'">×</button></div>'; }).join('') + '<p class="small muted" style="margin:0">× = back to automatic.</p></div>';
+  h += '</div>';
+  R.forEach(function(x, i){ var q = roofCalc(x), s = status(x);
+    h += '<div class="card roof st-'+s.replace(' ','').toLowerCase()+'"><div class="roofhd"><span class="roofno">'+(i+1)+'</span><input class="roofname" type="text" data-rf="'+i+'|name" value="'+esc(x.name)+'" placeholder="Roof '+(i+1)+' – e.g. rear" aria-label="Roof name"></div>';
+    h += '<div class="clockrow"><div><span class="pill">'+s+'</span><span class="small muted"> '+pauses(x)+' pause'+(pauses(x) === 1 ? '' : 's')+'</span></div><b class="clock" data-clock="'+i+'">'+clk(q.w)+'</b>' +
+         (r.lastAct && r.lastAct.i === i ? '<button type="button" class="clr" aria-label="Undo last" id="undoLast" title="Undo last">×</button>' : '') + '</div>';
+    if (x.segs.length) h += '<p class="small muted" style="margin:2px 0 6px">Started '+hmT(x.segs[0].s)+(x.segs.length > 1 ? ' · periods: '+x.segs.map(function(g){ return hmT(g.s)+'–'+(g.e ? hmT(g.e) : 'now'); }).join(', ') : '')+'</p>';
+    h += stateBtns(x, i);
+    h += '<div class="taps">' + stages().map(function(st){ var t = x.done[st[0]]; return '<button type="button" class="tap'+(t ? ' done' : '')+'" data-tap="'+i+'|'+st[0]+'">'+(t ? '✓ ' : '')+st[1]+(t ? '<small>'+hmT(t)+'</small>' : '')+'</button>'; }).join('') + '</div>';
     h += '<div class="grid2"><div><label class="f">Designed</label><input type="text" inputmode="numeric" data-rf="'+i+'|exp" value="'+esc(x.exp)+'" placeholder="panels"></div>' +
          '<div><label class="f">Fitted</label><input type="text" inputmode="numeric" data-rf="'+i+'|fitted" value="'+esc(x.fitted)+'" placeholder="__ of '+esc(x.exp || '?')+'"></div></div>';
     if (q.f != null && q.e != null && q.f < q.e) h += '<div class="flag red">'+(q.e - q.f)+' panel'+(q.e - q.f === 1 ? '' : 's')+' not fitted</div>';
-    h += [['start','Roof start'],['finish','Roof finish']].map(function(s){ return '<div class="stage"><b>'+s[1]+'</b><input type="time" data-rf="'+i+'|'+s[0]+'" value="'+esc(x[s[0]])+'"><button type="button" data-rnow="'+i+'|'+s[0]+'">Now</button>'+'<button type="button" class="clr" aria-label="Clear time" data-clr="'+i+'|'+s[0]+'">×</button></div>'; }).join('');
-    h += '<h3>Stages <small class="muted">(optional)</small></h3>' + STAGES.map(function(s){ return '<div class="stage"><b>'+s[1]+'</b><input type="time" data-rst="'+i+'|'+s[0]+'" value="'+esc(x.st[s[0]] || '')+'"><button type="button" data-rsnow="'+i+'|'+s[0]+'">Now</button>'+'<button type="button" class="clr" aria-label="Clear time" data-clr="'+i+'|st|'+s[0]+'">×</button></div>'; }).join('');
     h += '<label class="f">Short / issues on this roof</label><input type="text" data-rf="'+i+'|issues" value="'+esc(x.issues)+'" placeholder="e.g. 2 mid clamps short, cracked tile">';
     h += '<label class="f">Notes</label><textarea rows="2" data-rf="'+i+'|notes">'+esc(x.notes)+'</textarea>';
-    h += '<div class="grid" style="margin-top:10px"><div class="stat"><span>Roof time</span><b>'+hm(q.t)+'</b></div><div class="stat"><span>Min per panel</span><b>'+(q.mpp ? q.mpp.toFixed(1) : '–')+'</b></div></div>';
-    if (R.length > 1) h += '<button type="button" class="btn ghost" data-rdel="'+i+'">Remove this roof</button>';
+    if (q.mpp) h += '<p class="small muted">'+q.mpp.toFixed(1)+' min per panel (working time)</p>';
+    if (R.length > 1) h += '<button type="button" class="btn ghost danger" data-rdel="'+i+'">Remove this roof</button>';
     h += '</div>'; });
   h += '<button type="button" class="btn" id="addRoof">+ Add another roof</button>';
   var rt = reportText();
-  h += '<div class="card"><h2>'+ICON.check+' Totals</h2><div class="grid"><div class="stat"><span>Panels fitted</span><b>'+(rt.fitted != null ? rt.fitted : '–')+' / '+(rt.exp != null ? rt.exp : '–')+'</b></div><div class="stat"><span>Time on site</span><b>'+hm(rt.total)+'</b></div><div class="stat"><span>Min per panel</span><b>'+(rt.mpp ? rt.mpp.toFixed(1) : '–')+'</b></div><div class="stat"><span>Roofs</span><b>'+R.length+'</b></div></div>';
+  h += '<div class="card"><h2>'+ICON.check+' Totals</h2><div class="grid"><div class="stat"><span>Panels fitted</span><b>'+(rt.fitted != null ? rt.fitted : '–')+' / '+(rt.exp != null ? rt.exp : '–')+'</b></div><div class="stat"><span>Working time</span><b data-clock="all">'+hm(rt.total)+'</b></div><div class="stat"><span>On site</span><b>'+(rt.span != null ? hm(wmin(rt.span)) : '–')+'</b></div><div class="stat"><span>Min per panel</span><b>'+(rt.mpp ? rt.mpp.toFixed(1) : '–')+'</b></div></div>';
   var sh = shortages();
   h += '<label class="f">Delivery shortages <small>(from the Job sheet)</small></label>' + (sh.length ? sh.map(function(s){ return '<div class="flag red">'+esc(s)+'</div>'; }).join('') : '<div class="flag info">None recorded</div>');
   h += '<label class="f" for="r_extraShort">Anything else short or wrong</label><input id="r_extraShort" type="text" value="'+esc(r.extraShort)+'">';
@@ -797,7 +855,7 @@ function renderReport(){
       '<button class="btn ghost" id="clearPast">Clear the list</button>';
   } else h += '<p class="muted">Nothing saved yet.</p>';
   h += '</div>';
-  h += '<div class="card"><button type="button" class="btn ghost danger" id="restartRep">Start report again</button><p class="small muted" style="margin:0">Clears this job\'s report (times, roofs, notes) back to the design. Past jobs stay.</p></div>';
+  h += '<div class="card"><button type="button" class="btn ghost danger" id="restartRep">Start report again</button><p class="small muted" style="margin:0">Clears this job\'s report (clocks, roofs, notes) back to the design. Past jobs stay.</p></div>';
   $('t_report').innerHTML = h; bindReport();
 }
 function savePast(){
@@ -805,24 +863,46 @@ function savePast(){
   var row = {id: id, date: D.r.date, job: jb ? jb.sc + ' ' + jb.name : (D.r.name || 'Other job'), fitted: rt.fitted, exp: rt.exp, total: rt.total, mpp: rt.mpp, team: D.r.team, roofs: roofs().length};
   past = past.filter(function(x){ return x.id !== id; }); past.push(row); save('ejd_past', past);
 }
+function snap(){ return JSON.stringify(D.r.roofs.map(function(x){ return {segs: x.segs, done: x.done, finished: x.finished}; })); }
+function restore(js){ JSON.parse(js).forEach(function(o, i){ var x = D.r.roofs[i]; if (x){ x.segs = o.segs; x.done = o.done; x.finished = o.finished; } }); }
+function doAct(i, a){
+  var before = snap(), x = D.r.roofs[i], now = Date.now(), auto = [];
+  if (a === 'start' || a === 'resume'){
+    D.r.roofs.forEach(function(y, j){ if (j !== i && isWorking(y)){ y.segs[y.segs.length-1].e = now; auto.push(y.name || 'Roof ' + (j+1)); } });
+    x.finished = false; x.segs.push({s: now, e: null});
+  } else if (a === 'pause'){ if (isWorking(x)) x.segs[x.segs.length-1].e = now; }
+  else if (a === 'finish'){ if (isWorking(x)) x.segs[x.segs.length-1].e = now; x.finished = true; }
+  D.r.lastAct = {i: i, snap: before}; setJ(D); renderReport();
+  var nm = x.name || 'Roof ' + (i+1), msg = {start: nm + ' started', resume: nm + ' resumed', pause: nm + ' paused', finish: nm + ' finished'}[a];
+  if (auto.length) msg += ' – ' + auto.join(', ') + ' paused';
+  toast(msg, undoLast);
+}
+function undoLast(){ var la = D.r.lastAct; if (!la) return; restore(la.snap); D.r.lastAct = null; setJ(D); renderReport(); }
+function tickClocks(){ if (S.tab !== 'report' || !D || !D.r.roofs) return; var tot = 0;
+  D.r.roofs.forEach(function(x, i){ var w = workMs(x); tot += w; var el = document.querySelector('[data-clock="'+i+'"]'); if (el && isWorking(x)) el.textContent = clk(w); });
+  var a = document.querySelector('[data-clock="all"]'); if (a) a.textContent = hm(wmin(tot) || null); }
+setInterval(tickClocks, 1000);
 function bindReport(){
   function upd(k, v){ D.r[k] = v; setJ(D); }
   function each(sel, fn){ Array.prototype.forEach.call(document.querySelectorAll('#t_report ' + sel), fn); }
-  function ix(el, a){ var p = el.getAttribute(a).split('|'); return {r: D.r.roofs[+p[0]], k: p[1]}; }
-  ['name','addr','date','start','finish','extraShort','notes'].forEach(function(k){ var el = $('r_'+k); if (!el) return;
+  function ix(el, a){ var p = el.getAttribute(a).split('|'); return {i: +p[0], r: D.r.roofs[+p[0]], k: p[1]}; }
+  ['name','addr','date','extraShort','notes','startOv','finishOv'].forEach(function(k){ var el = $('r_'+k); if (!el) return;
     el.addEventListener('change', function(){ upd(k, el.value); renderReport(); });
     if (el.tagName === 'TEXTAREA' || el.type === 'text') el.addEventListener('input', function(){ upd(k, el.value); }); });
-  $('startNow').addEventListener('click', function(){ if (D.r.start && !confirm('Start time already set ('+D.r.start+'). Replace it?')) return; upd('start', nowHM()); renderReport(); });
-  $('finishNow').addEventListener('click', function(){ upd('finish', nowHM()); renderReport(); });
+  $('editT').addEventListener('click', function(){ upd('editT', !D.r.editT); renderReport(); });
+  each('[data-ov]', function(b){ b.addEventListener('click', function(){ upd(b.getAttribute('data-ov'), ''); renderReport(); }); });
   each('[data-rf]', function(el){ var t = ix(el, 'data-rf');
     el.addEventListener('change', function(){ t.r[t.k] = el.value; setJ(D); renderReport(); });
     if (el.tagName === 'TEXTAREA' || el.type === 'text') el.addEventListener('input', function(){ t.r[t.k] = el.value; setJ(D); }); });
-  each('[data-rnow]', function(b){ b.addEventListener('click', function(){ var t = ix(b, 'data-rnow'); if (t.r[t.k] && !confirm('Time already set ('+t.r[t.k]+'). Replace it?')) return; t.r[t.k] = nowHM();
-    if (t.k === 'start' && !D.r.start) D.r.start = t.r.start; setJ(D); renderReport(); }); });
-  each('[data-rst]', function(el){ el.addEventListener('change', function(){ var t = ix(el, 'data-rst'); t.r.st[t.k] = el.value; setJ(D); renderReport(); }); });
-  each('[data-rsnow]', function(b){ b.addEventListener('click', function(){ var t = ix(b, 'data-rsnow'); t.r.st[t.k] = nowHM(); setJ(D); renderReport(); }); });
+  each('[data-act]', function(b){ b.addEventListener('click', function(){ var t = ix(b, 'data-act'); doAct(t.i, t.k); }); });
+  if ($('undoLast')) $('undoLast').addEventListener('click', undoLast);
+  each('[data-tap]', function(b){ b.addEventListener('click', function(){ var t = ix(b, 'data-tap'), nm = (STAGES.filter(function(s){ return s[0] === t.k; })[0] || [0, t.k])[1];
+    if (t.r.done[t.k]){ if (!confirm('Clear “' + nm + '” (' + hmT(t.r.done[t.k]) + ')?')) return; var was = t.r.done[t.k]; delete t.r.done[t.k]; setJ(D); renderReport();
+      toast(nm + ' cleared', function(){ t.r.done[t.k] = was; setJ(D); renderReport(); }); return; }
+    t.r.done[t.k] = Date.now(); setJ(D); renderReport();
+    toast(nm + ' at ' + hmT(t.r.done[t.k]), function(){ delete t.r.done[t.k]; setJ(D); renderReport(); }); }); });
   each('[data-rdel]', function(b){ b.addEventListener('click', function(){ var i = +b.getAttribute('data-rdel'), x = D.r.roofs[i];
-    if (!confirm('Remove ' + (x.name || 'Roof ' + (i + 1)) + ' and everything typed for it?')) return; D.r.roofs.splice(i, 1); setJ(D); renderReport(); }); });
+    if (!confirm('Remove ' + (x.name || 'Roof ' + (i + 1)) + ' and everything typed for it?')) return; D.r.roofs.splice(i, 1); D.r.lastAct = null; setJ(D); renderReport(); }); });
   $('addRoof').addEventListener('click', function(){ D.r.roofs.push(newRoof('Roof ' + (D.r.roofs.length + 1), '')); setJ(D); renderReport();
     var all = document.querySelectorAll('#t_report .roofname'), el = all[all.length - 1]; if (el){ el.scrollIntoView({block: 'center'}); } });
   each('[data-chips] button', function(b){ b.addEventListener('click', function(){ upd('team', b.getAttribute('data-v')); renderReport(); }); });
@@ -835,13 +915,9 @@ function bindReport(){
     function done(){ $('copyBtn').textContent = 'Copied ✓'; }
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, function(){ fallbackCopy(t); done(); }); else { fallbackCopy(t); done(); } });
   $('savePast').addEventListener('click', function(){ savePast(); renderReport(); });
-  each('[data-clr]', function(b){ b.addEventListener('click', function(){ var p = b.getAttribute('data-clr').split('|'), o, k;
-    if (p[0] === 'job'){ o = D.r; k = p[1]; } else { o = D.r.roofs[+p[0]]; k = p[1]; if (k === 'st'){ o = o.st; k = p[2]; } }
-    var was = o[k]; if (!was) return; o[k] = ''; setJ(D); renderReport();
-    toast('Time cleared', function(){ o[k] = was; setJ(D); renderReport(); }); }); });
-  $('restartRep').addEventListener('click', function(){ if (!confirm('Start this report again? All times, roofs and notes for this job will be cleared. Past jobs are kept.')) return;
-    D.r = freshR(); setJ(D); roofs(); renderReport(); window.scrollTo(0, 0); toast('Report started again'); });
   if ($('clearPast')) $('clearPast').addEventListener('click', function(){ if (confirm('Clear the past jobs list on this phone?')){ save('ejd_past', []); renderReport(); } });
+  $('restartRep').addEventListener('click', function(){ if (!confirm('Start this report again? All clocks, roofs and notes for this job will be cleared. Past jobs are kept.')) return;
+    D.r = freshR(); setJ(D); roofs(); renderReport(); window.scrollTo(0, 0); toast('Report started again'); });
 }
 var TT = null;
 function toast(msg, undo){ var t = $('ejdToast'); if (!t){ t = document.createElement('div'); t.id = 'ejdToast'; document.body.appendChild(t); }
